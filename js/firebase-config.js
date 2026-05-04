@@ -16,11 +16,13 @@ const firebaseConfig = {
   measurementId: "G-W0NPXVWE2D"
 };
 
+// Inicializar Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
 
+// Objeto Global para Autenticación
 window.FirebaseAuth = {
   auth,
   currentUser: null,
@@ -33,11 +35,13 @@ window.FirebaseAuth = {
       displayName,
       created: Date.now()
     });
+    this.currentUser = cred.user;
     return cred.user;
   },
 
   async login(email, password) {
     const cred = await signInWithEmailAndPassword(auth, email, password);
+    this.currentUser = cred.user;
     return cred.user;
   },
 
@@ -52,11 +56,13 @@ window.FirebaseAuth = {
         created: Date.now()
       });
     }
+    this.currentUser = user;
     return user;
   },
 
   async logout() {
     await signOut(auth);
+    this.currentUser = null;
   },
 
   onAuthChanged(callback) {
@@ -67,38 +73,46 @@ window.FirebaseAuth = {
   },
 
   getUid() {
-    return this.currentUser ? this.currentUser.uid : null;
+    return this.currentUser ? this.currentUser.uid : (auth.currentUser ? auth.currentUser.uid : null);
   }
 };
 
+// Objeto Global para Base de Datos (Firestore)
 window.FirebaseDB = {
   async getUserData(uid) {
+    if (!uid) return null;
     const snap = await getDoc(doc(db, 'users', uid));
     return snap.exists() ? snap.data() : null;
   },
 
   async saveUserData(uid, data) {
+    if (!uid) return;
     await setDoc(doc(db, 'users', uid), data, { merge: true });
   },
 
   async getBabyProfile(uid) {
+    if (!uid) return null;
     const snap = await getDoc(doc(db, 'babyProfiles', uid));
     return snap.exists() ? snap.data() : null;
   },
 
   async saveBabyProfile(uid, profile) {
+    if (!uid) return;
     await setDoc(doc(db, 'babyProfiles', uid), profile, { merge: true });
   },
 
   async getAppData(uid) {
+    if (!uid) return {};
     const snap = await getDoc(doc(db, 'appData', uid));
     return snap.exists() ? snap.data() : {};
   },
 
   async saveAppData(uid, data) {
+    if (!uid) return;
     await setDoc(doc(db, 'appData', uid), data, { merge: true });
   }
 };
 
+// Avisar al sistema que Firebase está listo
 window.firebaseReady = true;
 document.dispatchEvent(new Event('firebase-ready'));
