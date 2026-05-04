@@ -221,7 +221,7 @@ const App = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bebecare_${profile.name.toLowerCase().replace(/\s+/g, '_')}_${Utils.getTodayString()}.json`;
+    a.download = `mi_baby_arg_${profile.name.toLowerCase().replace(/\s+/g, '_')}_${Utils.getTodayString()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -268,8 +268,8 @@ const App = {
         <div class="form-group">
           <label for="edit-gender">Sexo</label>
           <select id="edit-gender">
-            <option value="girl" ${profile.gender === 'girl' ? 'selected' : ''}>Nina</option>
-            <option value="boy" ${profile.gender === 'boy' ? 'selected' : ''}>Nino</option>
+            <option value="girl" ${profile.gender === 'girl' ? 'selected' : ''}>Femenino</option>
+            <option value="boy" ${profile.gender === 'boy' ? 'selected' : ''}>Masculino</option>
           </select>
         </div>
         <button type="submit" class="btn btn-primary btn-lg">Guardar Cambios</button>
