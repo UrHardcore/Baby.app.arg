@@ -134,18 +134,15 @@ const App = {
   },
  
   bindAuthEvents() {
-    // Welcome screen: show email login form
     document.getElementById('show-email-login')?.addEventListener('click', () => {
       document.getElementById('auth-welcome').classList.add('hidden');
       document.getElementById('login-form').classList.remove('hidden');
     });
  
-    // Guest mode
     document.getElementById('guest-login-btn')?.addEventListener('click', () => {
       this.handleGuestLogin();
     });
  
-    // Back to welcome from login/register
     document.getElementById('back-to-welcome-login')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.showAuthWelcome();
@@ -155,7 +152,6 @@ const App = {
       this.showAuthWelcome();
     });
  
-    // Toggle between login and register
     document.getElementById('show-register')?.addEventListener('click', (e) => {
       e.preventDefault();
       document.getElementById('login-form').classList.add('hidden');
@@ -170,19 +166,16 @@ const App = {
       this.clearAuthErrors();
     });
  
-    // Login form
     document.getElementById('login-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       await this.handleLogin();
     });
  
-    // Register form
     document.getElementById('register-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       await this.handleRegister();
     });
  
-    // Google sign-in
     document.getElementById('google-login-btn')?.addEventListener('click', () => {
       this.handleGoogleLogin();
     });
@@ -265,18 +258,12 @@ const App = {
       return;
     }
  
-    if (password.length < 6) {
-      this.showAuthError('register-error', 'La contrasena debe tener al menos 6 caracteres.');
-      return;
-    }
- 
     this.setAuthLoading('register-submit-btn', true);
     try {
       await window.FirebaseAuth.register(email, password, name);
     } catch (err) {
       this.showAuthError('register-error', this.getFirebaseErrorMessage(err.code));
       this.setAuthLoading('register-submit-btn', false);
-      document.getElementById('register-submit-btn').querySelector('span').textContent = 'Crear Cuenta';
     }
   },
  
@@ -290,7 +277,7 @@ const App = {
       localStorage.removeItem('bebecare_guest_mode');
       await window.FirebaseAuth.loginWithGoogle();
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      if (err.code !== 'auth/popup-closed-by-user') {
         this.showAuthError('login-error', this.getFirebaseErrorMessage(err.code));
       }
     } finally {
@@ -315,20 +302,17 @@ const App = {
     if (this._eventsBound) return;
     this._eventsBound = true;
  
-    // Onboarding form
     document.getElementById('onboarding-form').addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleOnboarding();
     });
  
-    // Navigation
     document.querySelectorAll('.nav-item[data-section]').forEach(item => {
       item.addEventListener('click', () => {
         this.navigateTo(item.dataset.section);
       });
     });
  
-    // More menu
     const moreBtn = document.getElementById('nav-more-btn');
     const moreMenu = document.getElementById('more-menu');
  
@@ -348,29 +332,24 @@ const App = {
       });
     });
  
-    // Dashboard card navigation
     document.querySelectorAll('.dash-card[data-nav]').forEach(card => {
       card.addEventListener('click', () => {
         this.navigateTo(card.dataset.nav);
       });
     });
  
-    // Theme toggle
     document.getElementById('theme-toggle').addEventListener('click', () => {
       this.toggleTheme();
     });
  
-    // Export
     document.getElementById('export-btn').addEventListener('click', () => {
       this.exportData();
     });
  
-    // Logout
     document.getElementById('logout-btn').addEventListener('click', () => {
       this.logout();
     });
  
-    // Modal
     document.getElementById('modal-close').addEventListener('click', () => {
       this.closeModal();
     });
@@ -379,19 +358,16 @@ const App = {
       this.closeModal();
     });
  
-    // Edit profile
     document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
       this.showEditProfile();
     });
  
-    // Resize handler for chart
     window.addEventListener('resize', Utils.debounce(() => {
       if (this.currentSection === 'growth') {
         GrowthModule.renderChart();
       }
     }, 250));
  
-    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeModal();
@@ -400,46 +376,49 @@ const App = {
     });
   },
  
-  handleOnboarding() {
   async handleOnboarding() {
     const name = document.getElementById('baby-name').value.trim();
     const lastName = document.getElementById('baby-lastname').value.trim();
     const birthDate = document.getElementById('baby-birthdate').value;
-      created: Date.now()
+    const birthTime = document.getElementById('baby-birthtime')?.value || '';
+    const birthWeight = parseFloat(document.getElementById('baby-weight').value);
+    const gender = document.getElementById('baby-gender').value;
+
+    if (!name || !birthDate || isNaN(birthWeight)) {
+        Utils.showToast('Completa los campos obligatorios', 'error');
+        return;
+    }
+
+    const profile = {
+        name,
+        lastName,
+        birthDate,
+        birthTime,
+        birthWeight,
+        gender,
+        created: Date.now()
     };
  
     Storage.saveBabyProfile(profile);
-    Storage.saveBabyProfileLocal(profile);
     this.showLoadingScreen('Guardando perfil...');
     await Storage.syncNow();
     this.showApp();
-    Utils.showToast(`Bienvenido/a! Perfil de ${name} ${lastName} creado`, 'success');
+    Utils.showToast(`¡Bienvenido/a! Perfil de ${name} creado`, 'success');
   },
  
   navigateTo(section) {
     if (this.currentSection === section) return;
- 
     this.currentSection = section;
- 
-    // Update sections visibility
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(`section-${section}`);
     if (target) target.classList.add('active');
- 
-    // Update nav active state
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-section="${section}"]`);
     if (navItem) navItem.classList.add('active');
- 
-    // Re-render chart if growth section
     if (section === 'growth') {
       setTimeout(() => GrowthModule.renderChart(), 100);
     }
- 
-    // Scroll to top
     document.getElementById('app-main').scrollTo({ top: 0, behavior: 'smooth' });
- 
-    // Hide info content when navigating to info
     if (section === 'info') {
       InfoModule.hideCategory();
     }
@@ -451,8 +430,6 @@ const App = {
     document.documentElement.setAttribute('data-theme', next);
     Storage.saveTheme(next);
     this.updateThemeIcons(next);
- 
-    // Re-render chart with new colors
     if (this.currentSection === 'growth') {
       setTimeout(() => GrowthModule.renderChart(), 100);
     }
@@ -464,7 +441,6 @@ const App = {
       Utils.showToast('No hay datos para exportar', 'warning');
       return;
     }
- 
     const data = Storage.exportAll();
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -475,7 +451,6 @@ const App = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
- 
     Utils.showToast('Datos exportados correctamente', 'success');
   },
  
@@ -492,10 +467,8 @@ const App = {
   showEditProfile() {
     const profile = Storage.getBabyProfile();
     if (!profile) return;
- 
     const modalBody = document.getElementById('modal-body');
     document.getElementById('modal-title').textContent = 'Editar Perfil';
- 
     modalBody.innerHTML = `
       <form id="edit-profile-form">
         <div class="form-group">
@@ -529,7 +502,6 @@ const App = {
         <button type="button" class="btn btn-danger btn-lg" style="margin-top: 8px;" onclick="App.resetApp()">Borrar Todos los Datos</button>
       </form>
     `;
- 
     document.getElementById('edit-profile-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const updatedProfile = {
@@ -547,7 +519,6 @@ const App = {
       this.closeModal();
       Utils.showToast('Perfil actualizado', 'success');
     });
- 
     this.openModal();
   },
  
@@ -568,7 +539,6 @@ const App = {
         Storage.clearLocal();
         await window.FirebaseAuth.logout();
       } catch (err) {
-        console.warn('Logout error:', err);
         Storage.clearLocal();
         this.showAuthScreen();
         this.showAuthWelcome();
@@ -577,31 +547,20 @@ const App = {
   },
  
   async resetApp() {
-    if (confirm('¿Estas seguro? Se borraran TODOS los datos de tu bebe. Esta accion no se puede deshacer.')) {
+    if (confirm('¿Estas seguro? Se borraran TODOS los datos de tu bebe.')) {
       Storage.clearLocal();
       if (!this.isGuest) {
         const uid = window.FirebaseAuth.getUid();
         if (uid) {
-          try {
-            await window.FirebaseDB.saveAppData(uid, {
-              profile: null,
-              vaccines: {},
-              reminders: [],
-              medical: [],
-              growth: [],
-              lastSync: Date.now()
-            });
-          } catch (err) {
-            console.warn('Reset error:', err);
-          }
+            await window.FirebaseDB.saveAppData(uid, { profile: null, vaccines: {}, reminders: [], medical: [], growth: [], lastSync: Date.now() });
         }
       }
       this.showOnboarding();
+      this.closeModal();
     }
   }
 };
  
-// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
 });
