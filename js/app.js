@@ -109,6 +109,11 @@ const App = {
       this.exportData();
     });
 
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      this.logout();
+    });
+
     // Modal
     document.getElementById('modal-close').addEventListener('click', () => {
       this.closeModal();
@@ -290,6 +295,28 @@ const App = {
     });
 
     this.openModal();
+  },
+
+  logout() {
+    if (confirm('¿Cerrar sesion? Volveras a la pantalla de inicio. Tus datos se mantendran guardados.')) {
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('onboarding').classList.remove('hidden');
+
+      const profile = Storage.getBabyProfile();
+      if (profile) {
+        document.getElementById('baby-name').value = profile.name;
+        document.getElementById('baby-birthdate').value = profile.birthDate;
+        document.getElementById('baby-birthtime').value = profile.birthTime || '12:00';
+        document.getElementById('baby-weight').value = profile.birthWeight;
+        document.getElementById('baby-gender').value = profile.gender || 'girl';
+      }
+
+      this.currentSection = 'dashboard';
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-dashboard')?.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector('.nav-item[data-section="dashboard"]')?.classList.add('active');
+    }
   },
 
   resetApp() {
