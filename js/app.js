@@ -1,14 +1,51 @@
 /* ========================================
-   BebeCare - Main Application
+   Mi Baby ARG - Main Application
+   Firebase Auth + Firestore integration
    ======================================== */
 
 const App = {
   currentSection: 'dashboard',
+  authReady: false,
 
   init() {
     this.initTheme();
-    this.checkProfile();
-    this.bindEvents();
+    this.bindAuthEvents();
+    this.waitForFirebase();
+  },
+
+  waitForFirebase() {
+    if (window.firebaseReady) {
+      this.setupAuth();
+    } else {
+      document.addEventListener('firebase-ready', () => this.setupAuth());
+      setTimeout(() => {
+        if (!this.authReady) {
+          this.showAuthScreen();
+          console.warn('Firebase took too long, showing auth screen anyway');
+        }
+      }, 5000);
+    }
+  },
+
+  setupAuth() {
+    window.FirebaseAuth.onAuthChanged(async (user) => {
+      this.authReady = true;
+      if (user) {
+        this.showLoadingScreen('Cargando datos...');
+        const hasData = await Storage.loadFromFirebase();
+        const profile = Storage.getBabyProfile();
+        if (profile) {
+          this.showApp();
+          this.bindEvents();
+        } else {
+          this.showOnboarding();
+          this.bindEvents();
+        }
+      } else {
+        Storage.clearLocal();
+        this.showAuthScreen();
+      }
+    });
   },
 
   initTheme() {
@@ -29,16 +66,25 @@ const App = {
     }
   },
 
-  checkProfile() {
-    const profile = Storage.getBabyProfile();
-    if (profile) {
-      this.showApp();
-    } else {
-      this.showOnboarding();
-    }
+  showLoadingScreen(text) {
+    document.getElementById('loading-screen').classList.remove('hidden');
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('app').classList.add('hidden');
+    const p = document.querySelector('#loading-screen p');
+    if (p && text) p.textContent = text;
+  },
+
+  showAuthScreen() {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('app').classList.add('hidden');
   },
 
   showOnboarding() {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('onboarding').classList.remove('hidden');
     document.getElementById('app').classList.add('hidden');
 
@@ -47,6 +93,8 @@ const App = {
   },
 
   showApp() {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('onboarding').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
 
@@ -58,7 +106,157 @@ const App = {
     Dashboard.init();
   },
 
+  bindAuthEvents() {
+    // Toggle between login and register
+    document.getElementById('show-register')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.remove('hidden');
+      this.clearAuthErrors();
+    });
+
+    document.getElementById('show-login')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      this.clearAuthErrors();
+    });
+
+    // Login form
+    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.handleLogin();
+    });
+
+    // Register form
+    document.getElementById('register-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await this.handleRegister();
+    });
+
+    // Google sign-in buttons
+    document.getElementById('google-login-btn')?.addEventListener('click', () => {
+      this.handleGoogleLogin();
+    });
+    document.getElementById('google-register-btn')?.addEventListener('click', () => {
+      this.handleGoogleLogin();
+    });
+  },
+
+  clearAuthErrors() {
+    document.getElementById('login-error')?.classList.add('hidden');
+    document.getElementById('register-error')?.classList.add('hidden');
+  },
+
+  showAuthError(formId, message) {
+    const el = document.getElementById(formId);
+    if (el) {
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+  },
+
+  setAuthLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    if (loading) {
+      btn.disabled = true;
+      btn.querySelector('span').textContent = 'Cargando...';
+    } else {
+      btn.disabled = false;
+    }
+  },
+
+  getFirebaseErrorMessage(code) {
+    const messages = {
+      'auth/email-already-in-use': 'Este email ya esta registrado.',
+      'auth/invalid-email': 'El email no es valido.',
+      'auth/weak-password': 'La contrasena debe tener al menos 6 caracteres.',
+      'auth/user-not-found': 'No existe una cuenta con este email.',
+      'auth/wrong-password': 'Contrasena incorrecta.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+      'auth/invalid-credential': 'Email o contrasena incorrectos.',
+      'auth/network-request-failed': 'Error de conexion. Verifica tu internet.'
+    };
+    return messages[code] || 'Ocurrio un error. Intenta nuevamente.';
+  },
+
+  async handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    this.clearAuthErrors();
+
+    if (!email || !password) {
+      this.showAuthError('login-error', 'Completa todos los campos.');
+      return;
+    }
+
+    this.setAuthLoading('login-submit-btn', true);
+    try {
+      await window.FirebaseAuth.login(email, password);
+    } catch (err) {
+      this.showAuthError('login-error', this.getFirebaseErrorMessage(err.code));
+      this.setAuthLoading('login-submit-btn', false);
+      document.getElementById('login-submit-btn').querySelector('span').textContent = 'Iniciar Sesion';
+    }
+  },
+
+  async handleRegister() {
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const password2 = document.getElementById('register-password2').value;
+    this.clearAuthErrors();
+
+    if (!name || !email || !password || !password2) {
+      this.showAuthError('register-error', 'Completa todos los campos.');
+      return;
+    }
+
+    if (password !== password2) {
+      this.showAuthError('register-error', 'Las contrasenas no coinciden.');
+      return;
+    }
+
+    if (password.length < 6) {
+      this.showAuthError('register-error', 'La contrasena debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    this.setAuthLoading('register-submit-btn', true);
+    try {
+      await window.FirebaseAuth.register(email, password, name);
+    } catch (err) {
+      this.showAuthError('register-error', this.getFirebaseErrorMessage(err.code));
+      this.setAuthLoading('register-submit-btn', false);
+      document.getElementById('register-submit-btn').querySelector('span').textContent = 'Crear Cuenta';
+    }
+  },
+
+  async handleGoogleLogin() {
+    this.clearAuthErrors();
+    const loginBtn = document.getElementById('google-login-btn');
+    const registerBtn = document.getElementById('google-register-btn');
+    if (loginBtn) loginBtn.disabled = true;
+    if (registerBtn) registerBtn.disabled = true;
+
+    try {
+      await window.FirebaseAuth.loginWithGoogle();
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        const visibleForm = document.getElementById('login-form').classList.contains('hidden') ? 'register-error' : 'login-error';
+        this.showAuthError(visibleForm, this.getFirebaseErrorMessage(err.code));
+      }
+    } finally {
+      if (loginBtn) loginBtn.disabled = false;
+      if (registerBtn) registerBtn.disabled = false;
+    }
+  },
+
   bindEvents() {
+    if (this._eventsBound) return;
+    this._eventsBound = true;
+
     // Onboarding form
     document.getElementById('onboarding-form').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -297,32 +495,37 @@ const App = {
     this.openModal();
   },
 
-  logout() {
-    if (confirm('¿Cerrar sesion? Volveras a la pantalla de inicio. Tus datos se mantendran guardados.')) {
-      document.getElementById('app').classList.add('hidden');
-      document.getElementById('onboarding').classList.remove('hidden');
-
-      const profile = Storage.getBabyProfile();
-      if (profile) {
-        document.getElementById('baby-name').value = profile.name;
-        document.getElementById('baby-birthdate').value = profile.birthDate;
-        document.getElementById('baby-birthtime').value = profile.birthTime || '12:00';
-        document.getElementById('baby-weight').value = profile.birthWeight;
-        document.getElementById('baby-gender').value = profile.gender || 'girl';
+  async logout() {
+    if (confirm('¿Cerrar sesion? Se cerrara tu cuenta. Los datos quedaran guardados en la nube.')) {
+      try {
+        Storage.clearLocal();
+        await window.FirebaseAuth.logout();
+      } catch (err) {
+        console.warn('Logout error:', err);
+        this.showAuthScreen();
       }
-
-      this.currentSection = 'dashboard';
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('section-dashboard')?.classList.add('active');
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.querySelector('.nav-item[data-section="dashboard"]')?.classList.add('active');
     }
   },
 
-  resetApp() {
-    if (confirm('¿Estas seguro? Se borraran TODOS los datos. Esta accion no se puede deshacer.')) {
-      localStorage.clear();
-      window.location.reload();
+  async resetApp() {
+    if (confirm('¿Estas seguro? Se borraran TODOS los datos de tu bebe. Esta accion no se puede deshacer.')) {
+      Storage.clearLocal();
+      const uid = window.FirebaseAuth.getUid();
+      if (uid) {
+        try {
+          await window.FirebaseDB.saveAppData(uid, {
+            profile: null,
+            vaccines: {},
+            reminders: [],
+            medical: [],
+            growth: [],
+            lastSync: Date.now()
+          });
+        } catch (err) {
+          console.warn('Reset error:', err);
+        }
+      }
+      this.showOnboarding();
     }
   }
 };

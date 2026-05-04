@@ -1,10 +1,11 @@
 /* ========================================
-   BebeCare - Storage Module
-   localStorage persistence with fallback
+   Mi Baby ARG - Storage Module
+   localStorage + Firebase Firestore sync
    ======================================== */
 
 const Storage = {
   PREFIX: 'bebecare_',
+  _syncTimeout: null,
 
   _getKey(key) {
     return this.PREFIX + key;
@@ -22,6 +23,7 @@ const Storage = {
   set(key, value) {
     try {
       localStorage.setItem(this._getKey(key), JSON.stringify(value));
+      this._scheduleSync();
       return true;
     } catch {
       return false;
@@ -31,10 +33,82 @@ const Storage = {
   remove(key) {
     try {
       localStorage.removeItem(this._getKey(key));
+      this._scheduleSync();
       return true;
     } catch {
       return false;
     }
+  },
+
+  _scheduleSync() {
+    if (this._syncTimeout) clearTimeout(this._syncTimeout);
+    this._syncTimeout = setTimeout(() => this.syncToFirebase(), 1500);
+  },
+
+  async syncToFirebase() {
+    if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) return;
+    const uid = window.FirebaseAuth.getUid();
+    try {
+      const data = {
+        profile: this.getBabyProfile(),
+        vaccines: this.getVaccines(),
+        reminders: this.getReminders(),
+        medical: this.getMedicalRecords(),
+        growth: this.getGrowthRecords(),
+        lastSync: Date.now()
+      };
+      await window.FirebaseDB.saveAppData(uid, data);
+    } catch (err) {
+      console.warn('Firebase sync error:', err);
+    }
+  },
+
+  async loadFromFirebase() {
+    if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) return false;
+    const uid = window.FirebaseAuth.getUid();
+    try {
+      const data = await window.FirebaseDB.getAppData(uid);
+      if (data && data.profile) {
+        if (data.profile) this.saveBabyProfileLocal(data.profile);
+        if (data.vaccines) this.saveVaccinesLocal(data.vaccines);
+        if (data.reminders) this.saveRemindersLocal(data.reminders);
+        if (data.medical) this.saveMedicalRecordsLocal(data.medical);
+        if (data.growth) this.saveGrowthRecordsLocal(data.growth);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn('Firebase load error:', err);
+      return false;
+    }
+  },
+
+  // Local-only setters (no sync trigger, used during load)
+  saveBabyProfileLocal(profile) {
+    try { localStorage.setItem(this._getKey('profile'), JSON.stringify(profile)); } catch {}
+  },
+  saveVaccinesLocal(vaccines) {
+    try { localStorage.setItem(this._getKey('vaccines'), JSON.stringify(vaccines)); } catch {}
+  },
+  saveRemindersLocal(reminders) {
+    try { localStorage.setItem(this._getKey('reminders'), JSON.stringify(reminders)); } catch {}
+  },
+  saveMedicalRecordsLocal(records) {
+    try { localStorage.setItem(this._getKey('medical'), JSON.stringify(records)); } catch {}
+  },
+  saveGrowthRecordsLocal(records) {
+    try { localStorage.setItem(this._getKey('growth'), JSON.stringify(records)); } catch {}
+  },
+
+  clearLocal() {
+    const theme = this.getTheme();
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(this.PREFIX)) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+    this.saveTheme(theme);
   },
 
   getBabyProfile() {
