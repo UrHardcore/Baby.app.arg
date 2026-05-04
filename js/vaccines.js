@@ -29,6 +29,9 @@ const VaccineModule = {
     if (!profile) return 'pending';
     const dueDate = Utils.getVaccineDueDate(profile.birthDate, vaccine.ageMonths, vaccine.ageDays);
     if (Utils.isOverdue(dueDate)) return 'overdue';
+    const now = new Date();
+    const diffDays = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 5 && diffDays >= 0) return 'warning';
     return 'pending';
   },
 
@@ -81,7 +84,11 @@ const VaccineModule = {
     }));
 
     if (this.currentFilter !== 'all') {
-      vaccines = vaccines.filter(v => v.status === this.currentFilter);
+      if (this.currentFilter === 'pending') {
+        vaccines = vaccines.filter(v => v.status === 'pending' || v.status === 'warning');
+      } else {
+        vaccines = vaccines.filter(v => v.status === this.currentFilter);
+      }
     }
 
     if (vaccines.length === 0) {
@@ -99,12 +106,19 @@ const VaccineModule = {
       const statusLabels = {
         applied: 'Aplicada',
         pending: 'Pendiente',
-        overdue: 'Vencida'
+        overdue: 'Vencida',
+        warning: 'Por vencer'
       };
 
-      const dueDateStr = v.status === 'applied' && this.appliedVaccines[v.id]
-        ? `Aplicada el ${Utils.formatDateShort(this.appliedVaccines[v.id].appliedDate)}`
-        : `Estimada: ${v.dueDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+      let dueDateStr;
+      if (v.status === 'applied' && this.appliedVaccines[v.id]) {
+        dueDateStr = `Aplicada el ${Utils.formatDateShort(this.appliedVaccines[v.id].appliedDate)}`;
+      } else if (v.status === 'warning') {
+        const diffDays = Math.ceil((v.dueDate - new Date()) / (1000 * 60 * 60 * 24));
+        dueDateStr = diffDays <= 0 ? 'Vence hoy!' : `Vence en ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+      } else {
+        dueDateStr = `Estimada: ${v.dueDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+      }
 
       return `
         <div class="vaccine-card ${v.status}">
@@ -124,6 +138,36 @@ const VaccineModule = {
     }).join('');
 
     this.updateProgress();
+    this.updateAlertDot();
+  },
+
+  updateAlertDot() {
+    const profile = Storage.getBabyProfile();
+    if (!profile) return;
+    let hasOverdue = false;
+    let hasWarning = false;
+    for (const v of VACCINE_SCHEDULE) {
+      const status = this.getVaccineStatus(v);
+      if (status === 'overdue') { hasOverdue = true; break; }
+      if (status === 'warning') hasWarning = true;
+    }
+    const dot = document.getElementById('vaccine-alert-dot');
+    const navBtn = document.getElementById('nav-vaccines');
+    if (!dot || !navBtn) return;
+    if (hasOverdue) {
+      dot.classList.remove('hidden');
+      dot.classList.add('alert-critical');
+      dot.classList.remove('alert-warning');
+      navBtn.classList.add('vaccine-buzz');
+    } else if (hasWarning) {
+      dot.classList.remove('hidden');
+      dot.classList.add('alert-warning');
+      dot.classList.remove('alert-critical');
+      navBtn.classList.remove('vaccine-buzz');
+    } else {
+      dot.classList.add('hidden');
+      navBtn.classList.remove('vaccine-buzz');
+    }
   },
 
   updateProgress() {

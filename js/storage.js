@@ -131,7 +131,9 @@ const Storage = {
   },
 
   saveVaccines(vaccines) {
-    return this.set('vaccines', vaccines);
+    const result = this.set('vaccines', vaccines);
+    this.syncNow();
+    return result;
   },
 
   getReminders() {
@@ -139,7 +141,9 @@ const Storage = {
   },
 
   saveReminders(reminders) {
-    return this.set('reminders', reminders);
+    const result = this.set('reminders', reminders);
+    this.syncNow();
+    return result;
   },
 
   getMedicalRecords() {
@@ -147,7 +151,9 @@ const Storage = {
   },
 
   saveMedicalRecords(records) {
-    return this.set('medical', records);
+    const result = this.set('medical', records);
+    this.syncNow();
+    return result;
   },
 
   getGrowthRecords() {
@@ -155,7 +161,9 @@ const Storage = {
   },
 
   saveGrowthRecords(records) {
-    return this.set('growth', records);
+    const result = this.set('growth', records);
+    this.syncNow();
+    return result;
   },
 
   getTheme() {

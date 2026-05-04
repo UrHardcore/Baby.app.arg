@@ -123,7 +123,7 @@ const Dashboard = {
     const profile = Storage.getBabyProfile();
     if (!profile) return;
 
-    const name = profile.name;
+    const fullName = profile.lastName ? `${profile.name} ${profile.lastName}` : profile.name;
     const headerName = document.getElementById('header-name');
     const babySectionTitle = document.getElementById('baby-section-title');
     const profileName = document.getElementById('baby-profile-name');
@@ -132,9 +132,9 @@ const Dashboard = {
     const profileWeight = document.getElementById('baby-profile-weight');
     const profileAvatar = document.getElementById('baby-profile-avatar');
 
-    if (headerName) headerName.textContent = name;
-    if (babySectionTitle) babySectionTitle.textContent = name;
-    if (profileName) profileName.textContent = name;
+    if (headerName) headerName.textContent = fullName;
+    if (babySectionTitle) babySectionTitle.textContent = fullName;
+    if (profileName) profileName.textContent = fullName;
     if (profileBirth) profileBirth.textContent = `Nacido/a el ${Utils.formatDate(profile.birthDate)}${profile.birthTime ? ' a las ' + profile.birthTime : ''}`;
     if (profileAge) profileAge.textContent = Utils.formatAge(profile.birthDate);
     if (profileWeight) profileWeight.textContent = `Peso al nacer: ${profile.birthWeight} kg`;

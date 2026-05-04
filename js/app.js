@@ -402,15 +402,17 @@ const App = {
 
   handleOnboarding() {
     const name = document.getElementById('baby-name').value.trim();
+    const lastName = document.getElementById('baby-lastname').value.trim();
     const birthDate = document.getElementById('baby-birthdate').value;
     const birthTime = document.getElementById('baby-birthtime').value;
     const birthWeight = parseFloat(document.getElementById('baby-weight').value);
     const gender = document.getElementById('baby-gender').value;
 
-    if (!name || !birthDate || !birthWeight) return;
+    if (!name || !lastName || !birthDate || !birthWeight) return;
 
     const profile = {
       name,
+      lastName,
       birthDate,
       birthTime,
       birthWeight,
@@ -420,7 +422,7 @@ const App = {
 
     Storage.saveBabyProfile(profile);
     this.showApp();
-    Utils.showToast(`Bienvenido/a! Perfil de ${name} creado`, 'success');
+    Utils.showToast(`Bienvenido/a! Perfil de ${name} ${lastName} creado`, 'success');
   },
 
   navigateTo(section) {
@@ -510,6 +512,10 @@ const App = {
           <input type="text" id="edit-name" required value="${profile.name}">
         </div>
         <div class="form-group">
+          <label for="edit-lastname">Apellido</label>
+          <input type="text" id="edit-lastname" required value="${profile.lastName || ''}">
+        </div>
+        <div class="form-group">
           <label for="edit-birthdate">Fecha de nacimiento</label>
           <input type="date" id="edit-birthdate" required value="${profile.birthDate}">
         </div>
@@ -538,6 +544,7 @@ const App = {
       const updatedProfile = {
         ...profile,
         name: document.getElementById('edit-name').value.trim(),
+        lastName: document.getElementById('edit-lastname').value.trim(),
         birthDate: document.getElementById('edit-birthdate').value,
         birthTime: document.getElementById('edit-birthtime').value,
         birthWeight: parseFloat(document.getElementById('edit-weight').value),
