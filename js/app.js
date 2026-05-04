@@ -6,10 +6,30 @@
 const App = {
   currentSection: 'dashboard',
   authReady: false,
+  isGuest: false,
 
   init() {
     this.initTheme();
     this.bindAuthEvents();
+    this.checkGuestOrFirebase();
+  },
+
+  checkGuestOrFirebase() {
+    const guestMode = localStorage.getItem('bebecare_guest_mode');
+    if (guestMode === 'true') {
+      this.isGuest = true;
+      this.authReady = true;
+      const profile = Storage.getBabyProfile();
+      if (profile) {
+        this.showApp();
+        this.bindEvents();
+      } else {
+        this.showOnboarding();
+        this.bindEvents();
+      }
+      this.waitForFirebase();
+      return;
+    }
     this.waitForFirebase();
   },
 
@@ -21,7 +41,6 @@ const App = {
       setTimeout(() => {
         if (!this.authReady) {
           this.showAuthScreen();
-          console.warn('Firebase took too long, showing auth screen anyway');
         }
       }, 5000);
     }
@@ -30,6 +49,7 @@ const App = {
   setupAuth() {
     window.FirebaseAuth.onAuthChanged(async (user) => {
       this.authReady = true;
+      if (this.isGuest) return;
       if (user) {
         this.showLoadingScreen('Cargando datos...');
         const hasData = await Storage.loadFromFirebase();
@@ -42,7 +62,6 @@ const App = {
           this.bindEvents();
         }
       } else {
-        Storage.clearLocal();
         this.showAuthScreen();
       }
     });
@@ -80,6 +99,7 @@ const App = {
     document.getElementById('auth-screen').classList.remove('hidden');
     document.getElementById('onboarding').classList.add('hidden');
     document.getElementById('app').classList.add('hidden');
+    this.showAuthWelcome();
   },
 
   showOnboarding() {
@@ -106,7 +126,35 @@ const App = {
     Dashboard.init();
   },
 
+  showAuthWelcome() {
+    document.getElementById('auth-welcome').classList.remove('hidden');
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+    this.clearAuthErrors();
+  },
+
   bindAuthEvents() {
+    // Welcome screen: show email login form
+    document.getElementById('show-email-login')?.addEventListener('click', () => {
+      document.getElementById('auth-welcome').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+    });
+
+    // Guest mode
+    document.getElementById('guest-login-btn')?.addEventListener('click', () => {
+      this.handleGuestLogin();
+    });
+
+    // Back to welcome from login/register
+    document.getElementById('back-to-welcome-login')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.showAuthWelcome();
+    });
+    document.getElementById('back-to-welcome-register')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.showAuthWelcome();
+    });
+
     // Toggle between login and register
     document.getElementById('show-register')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -134,11 +182,8 @@ const App = {
       await this.handleRegister();
     });
 
-    // Google sign-in buttons
+    // Google sign-in
     document.getElementById('google-login-btn')?.addEventListener('click', () => {
-      this.handleGoogleLogin();
-    });
-    document.getElementById('google-register-btn')?.addEventListener('click', () => {
       this.handleGoogleLogin();
     });
   },
@@ -193,6 +238,8 @@ const App = {
 
     this.setAuthLoading('login-submit-btn', true);
     try {
+      this.isGuest = false;
+      localStorage.removeItem('bebecare_guest_mode');
       await window.FirebaseAuth.login(email, password);
     } catch (err) {
       this.showAuthError('login-error', this.getFirebaseErrorMessage(err.code));
@@ -236,20 +283,31 @@ const App = {
   async handleGoogleLogin() {
     this.clearAuthErrors();
     const loginBtn = document.getElementById('google-login-btn');
-    const registerBtn = document.getElementById('google-register-btn');
     if (loginBtn) loginBtn.disabled = true;
-    if (registerBtn) registerBtn.disabled = true;
 
     try {
+      this.isGuest = false;
+      localStorage.removeItem('bebecare_guest_mode');
       await window.FirebaseAuth.loginWithGoogle();
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-        const visibleForm = document.getElementById('login-form').classList.contains('hidden') ? 'register-error' : 'login-error';
-        this.showAuthError(visibleForm, this.getFirebaseErrorMessage(err.code));
+        this.showAuthError('login-error', this.getFirebaseErrorMessage(err.code));
       }
     } finally {
       if (loginBtn) loginBtn.disabled = false;
-      if (registerBtn) registerBtn.disabled = false;
+    }
+  },
+
+  handleGuestLogin() {
+    this.isGuest = true;
+    localStorage.setItem('bebecare_guest_mode', 'true');
+    const profile = Storage.getBabyProfile();
+    if (profile) {
+      this.showApp();
+      this.bindEvents();
+    } else {
+      this.showOnboarding();
+      this.bindEvents();
     }
   },
 
@@ -496,7 +554,16 @@ const App = {
   },
 
   async logout() {
-    if (confirm('¿Cerrar sesion? Se cerrara tu cuenta. Los datos quedaran guardados en la nube.')) {
+    if (this.isGuest) {
+      if (confirm('¿Cerrar sesion de invitado? Los datos de este dispositivo se mantendran.')) {
+        localStorage.removeItem('bebecare_guest_mode');
+        this.isGuest = false;
+        this.showAuthScreen();
+        this.showAuthWelcome();
+      }
+      return;
+    }
+    if (confirm('¿Cerrar sesion? Los datos quedaran guardados en la nube.')) {
       try {
         this.showLoadingScreen('Guardando datos...');
         await Storage.syncNow();
@@ -506,6 +573,7 @@ const App = {
         console.warn('Logout error:', err);
         Storage.clearLocal();
         this.showAuthScreen();
+        this.showAuthWelcome();
       }
     }
   },
@@ -513,19 +581,21 @@ const App = {
   async resetApp() {
     if (confirm('¿Estas seguro? Se borraran TODOS los datos de tu bebe. Esta accion no se puede deshacer.')) {
       Storage.clearLocal();
-      const uid = window.FirebaseAuth.getUid();
-      if (uid) {
-        try {
-          await window.FirebaseDB.saveAppData(uid, {
-            profile: null,
-            vaccines: {},
-            reminders: [],
-            medical: [],
-            growth: [],
-            lastSync: Date.now()
-          });
-        } catch (err) {
-          console.warn('Reset error:', err);
+      if (!this.isGuest) {
+        const uid = window.FirebaseAuth.getUid();
+        if (uid) {
+          try {
+            await window.FirebaseDB.saveAppData(uid, {
+              profile: null,
+              vaccines: {},
+              reminders: [],
+              medical: [],
+              growth: [],
+              lastSync: Date.now()
+            });
+          } catch (err) {
+            console.warn('Reset error:', err);
+          }
         }
       }
       this.showOnboarding();

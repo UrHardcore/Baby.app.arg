@@ -915,3 +915,64 @@ a {
 .btn-google svg {
   flex-shrink: 0;
 }
+
+.btn-email-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+}
+
+.btn-email-option:hover {
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-email-option:active {
+  transform: scale(0.98);
+}
+
+.btn-guest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-guest:hover {
+  background: var(--bg-input);
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.btn-guest:active {
+  transform: scale(0.98);
+}
+
+.auth-guest-note {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
