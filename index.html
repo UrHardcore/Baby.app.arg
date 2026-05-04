@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6C63FF">
+  <meta name="description" content="BebeCare - Asistente inteligente para padres primerizos. Gestiona el crecimiento de tu bebe desde recien nacido hasta los 10 anos.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>BebeCare - Asistente para Padres</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👶</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <!-- Onboarding Screen -->
+  <div id="onboarding" class="screen onboarding-screen">
+    <div class="onboarding-container">
+      <div class="onboarding-header">
+        <div class="logo-icon">👶</div>
+        <h1>BebeCare</h1>
+        <p class="subtitle">Tu asistente inteligente para el cuidado de tu bebe</p>
+      </div>
+      <form id="onboarding-form" class="onboarding-form">
+        <div class="form-group">
+          <label for="baby-name">Nombre del bebe</label>
+          <input type="text" id="baby-name" placeholder="Ej: Sofia" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="baby-birthdate">Fecha de nacimiento</label>
+          <input type="date" id="baby-birthdate" required>
+        </div>
+        <div class="form-group">
+          <label for="baby-birthtime">Hora de nacimiento</label>
+          <input type="time" id="baby-birthtime" value="12:00">
+        </div>
+        <div class="form-group">
+          <label for="baby-weight">Peso al nacer (kg)</label>
+          <input type="number" id="baby-weight" placeholder="Ej: 3.5" step="0.01" min="0.5" max="7" required>
+        </div>
+        <div class="form-group">
+          <label for="baby-gender">Sexo</label>
+          <select id="baby-gender">
+            <option value="girl">Nina</option>
+            <option value="boy">Nino</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">
+          <span>Comenzar</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="app hidden">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="baby-avatar" id="header-avatar">👶</div>
+        <div class="header-info">
+          <h1 id="header-name">BebeCare</h1>
+          <span id="header-age" class="header-age"></span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
+          <svg class="icon-sun" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="icon-moon hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="export-btn" title="Exportar datos" aria-label="Exportar datos">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main" id="app-main">
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="section active">
+        <div class="section-header">
+          <h2>Panel Principal</h2>
+          <p class="section-subtitle">Resumen del dia</p>
+        </div>
+        <div class="dashboard-grid">
+          <div class="dash-card dash-card-age" id="dash-age">
+            <div class="dash-card-icon">🎂</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Edad actual</span>
+              <span class="dash-card-value" id="dash-age-value">--</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card-vaccine" id="dash-vaccine" data-nav="vaccines">
+            <div class="dash-card-icon">💉</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Proxima vacuna</span>
+              <span class="dash-card-value" id="dash-vaccine-value">--</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card-reminder" id="dash-reminder" data-nav="reminders">
+            <div class="dash-card-icon">🔔</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Recordatorios</span>
+              <span class="dash-card-value" id="dash-reminder-value">Sin pendientes</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card-medical" id="dash-medical" data-nav="medical">
+            <div class="dash-card-icon">🏥</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Ultimo registro</span>
+              <span class="dash-card-value" id="dash-medical-value">Sin registros</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card-growth" id="dash-growth" data-nav="growth">
+            <div class="dash-card-icon">📏</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Crecimiento</span>
+              <span class="dash-card-value" id="dash-growth-value">Sin datos</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card-tip">
+            <div class="dash-card-icon">💡</div>
+            <div class="dash-card-content">
+              <span class="dash-card-label">Consejo del dia</span>
+              <span class="dash-card-value dash-tip" id="dash-tip-value">Cargando...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Development Timeline -->
+        <div class="timeline-preview">
+          <h3>Linea de desarrollo</h3>
+          <div class="timeline-bar" id="timeline-bar"></div>
+        </div>
+      </section>
+
+      <!-- Vaccines Section -->
+      <section id="section-vaccines" class="section">
+        <div class="section-header">
+          <h2>Calendario de Vacunacion</h2>
+          <p class="section-subtitle">Control completo de vacunas</p>
+        </div>
+        <div class="vaccine-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="vaccine-progress-fill"></div>
+          </div>
+          <span class="progress-text" id="vaccine-progress-text">0% completado</span>
+        </div>
+        <div class="vaccine-filters">
+          <button class="filter-btn active" data-filter="all">Todas</button>
+          <button class="filter-btn" data-filter="pending">Pendientes</button>
+          <button class="filter-btn" data-filter="applied">Aplicadas</button>
+          <button class="filter-btn" data-filter="overdue">Vencidas</button>
+        </div>
+        <div class="vaccine-list" id="vaccine-list"></div>
+      </section>
+
+      <!-- Reminders Section -->
+      <section id="section-reminders" class="section">
+        <div class="section-header">
+          <h2>Recordatorios</h2>
+          <p class="section-subtitle">No olvides nada importante</p>
+        </div>
+        <button class="btn btn-primary btn-add" id="add-reminder-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo recordatorio
+        </button>
+        <div class="reminder-list" id="reminder-list">
+          <div class="empty-state">
+            <div class="empty-icon">🔔</div>
+            <p>No hay recordatorios</p>
+            <span>Agrega un recordatorio para no olvidar nada</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Medical History Section -->
+      <section id="section-medical" class="section">
+        <div class="section-header">
+          <h2>Historial Medico</h2>
+          <p class="section-subtitle">Ficha clinica de tu bebe</p>
+        </div>
+        <button class="btn btn-primary btn-add" id="add-medical-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo registro
+        </button>
+        <div class="medical-list" id="medical-list">
+          <div class="empty-state">
+            <div class="empty-icon">🏥</div>
+            <p>Sin registros medicos</p>
+            <span>Registra las consultas y eventos medicos</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Growth Section -->
+      <section id="section-growth" class="section">
+        <div class="section-header">
+          <h2>Control de Crecimiento</h2>
+          <p class="section-subtitle">Peso y altura</p>
+        </div>
+        <button class="btn btn-primary btn-add" id="add-growth-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo registro
+        </button>
+        <div class="growth-chart-container">
+          <div class="growth-tabs">
+            <button class="growth-tab active" data-type="weight">Peso</button>
+            <button class="growth-tab" data-type="height">Altura</button>
+          </div>
+          <div class="growth-chart" id="growth-chart">
+            <canvas id="growth-canvas"></canvas>
+          </div>
+          <div class="growth-indicator" id="growth-indicator"></div>
+        </div>
+        <div class="growth-list" id="growth-list">
+          <div class="empty-state">
+            <div class="empty-icon">📏</div>
+            <p>Sin registros de crecimiento</p>
+            <span>Registra peso y altura periodicamente</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Info Section -->
+      <section id="section-info" class="section">
+        <div class="section-header">
+          <h2>Guia Completa</h2>
+          <p class="section-subtitle">Todo lo que necesitas saber</p>
+        </div>
+        <div class="info-categories" id="info-categories">
+          <div class="info-card" data-info="feeding">
+            <div class="info-card-icon">🍼</div>
+            <span>Alimentacion</span>
+          </div>
+          <div class="info-card" data-info="hygiene">
+            <div class="info-card-icon">🧼</div>
+            <span>Higiene</span>
+          </div>
+          <div class="info-card" data-info="symptoms">
+            <div class="info-card-icon">🤒</div>
+            <span>Sintomas</span>
+          </div>
+          <div class="info-card" data-info="interpretation">
+            <div class="info-card-icon">🔍</div>
+            <span>Interpretacion</span>
+          </div>
+          <div class="info-card" data-info="development">
+            <div class="info-card-icon">🧒</div>
+            <span>Desarrollo</span>
+          </div>
+          <div class="info-card" data-info="tips">
+            <div class="info-card-icon">💡</div>
+            <span>Consejos</span>
+          </div>
+        </div>
+        <div class="info-content" id="info-content"></div>
+      </section>
+
+      <!-- Baby Profile Section -->
+      <section id="section-baby" class="section">
+        <div class="section-header">
+          <h2 id="baby-section-title">Mi Bebe</h2>
+          <p class="section-subtitle">Perfil y linea de tiempo</p>
+        </div>
+        <div class="baby-profile-card">
+          <div class="baby-profile-avatar" id="baby-profile-avatar">👶</div>
+          <div class="baby-profile-info">
+            <h3 id="baby-profile-name">--</h3>
+            <p id="baby-profile-birth">--</p>
+            <p id="baby-profile-age">--</p>
+            <p id="baby-profile-weight">--</p>
+          </div>
+          <button class="btn btn-outline btn-sm" id="edit-profile-btn">Editar perfil</button>
+        </div>
+        <div class="baby-timeline">
+          <h3>Linea de Tiempo</h3>
+          <div class="timeline" id="baby-timeline"></div>
+        </div>
+        <div class="baby-stats">
+          <h3>Estadisticas</h3>
+          <div class="stats-grid" id="baby-stats-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-section="dashboard" aria-label="Panel">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Inicio</span>
+      </button>
+      <button class="nav-item" data-section="vaccines" aria-label="Vacunas">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Vacunas</span>
+      </button>
+      <button class="nav-item" data-section="info" aria-label="Guia">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span>Guia</span>
+      </button>
+      <button class="nav-item" data-section="baby" aria-label="Mi Bebe">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Mi Bebe</span>
+      </button>
+      <button class="nav-item nav-more" id="nav-more-btn" aria-label="Mas">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        <span>Mas</span>
+      </button>
+    </nav>
+
+    <!-- More Menu -->
+    <div class="more-menu hidden" id="more-menu">
+      <div class="more-menu-overlay"></div>
+      <div class="more-menu-content">
+        <button class="more-menu-item" data-section="reminders">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>Recordatorios</span>
+        </button>
+        <button class="more-menu-item" data-section="medical">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Historial Medico</span>
+        </button>
+        <button class="more-menu-item" data-section="growth">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Crecimiento</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal hidden" id="modal">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">Modal</h3>
+          <button class="modal-close" id="modal-close" aria-label="Cerrar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/vaccines.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/medical.js"></script>
+  <script src="js/growth.js"></script>
+  <script src="js/info.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

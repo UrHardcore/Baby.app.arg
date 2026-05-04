@@ -1,0 +1,232 @@
+/* ========================================
+   BebeCare - Responsive Styles
+   Mobile-first approach
+   ======================================== */
+
+/* Small phones (< 360px) */
+@media (max-width: 359px) {
+  .onboarding-container {
+    padding: 28px 20px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-card-age {
+    grid-column: span 1;
+  }
+
+  .info-categories {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-item span {
+    font-size: 10px;
+  }
+}
+
+/* Tablets (>= 600px) */
+@media (min-width: 600px) {
+  .app-main {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dash-card-age {
+    grid-column: span 3;
+  }
+
+  .info-categories {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .vaccine-card {
+    padding: 18px 20px;
+  }
+
+  .modal-content {
+    border-radius: var(--radius-xl);
+    margin: auto;
+    max-height: 80vh;
+  }
+
+  .modal {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .growth-chart {
+    height: 280px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Desktop (>= 900px) */
+@media (min-width: 900px) {
+  :root {
+    --nav-height: 64px;
+  }
+
+  .app-header {
+    padding: 0 32px;
+  }
+
+  .app-main {
+    max-width: 900px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .bottom-nav {
+    max-width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .dash-card {
+    padding: 22px 20px;
+  }
+
+  .info-categories {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .vaccine-list {
+    gap: 12px;
+  }
+
+  .onboarding-container {
+    padding: 48px 40px;
+  }
+
+  .growth-chart {
+    height: 320px;
+  }
+}
+
+/* Large Desktop (>= 1200px) */
+@media (min-width: 1200px) {
+  .app-main {
+    max-width: 1000px;
+  }
+}
+
+/* Landscape orientation - mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .onboarding-screen {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .onboarding-container {
+    padding: 20px 24px;
+  }
+
+  .logo-icon {
+    font-size: 36px;
+    margin-bottom: 4px;
+  }
+
+  .onboarding-header h1 {
+    font-size: 22px;
+  }
+
+  .onboarding-header {
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .app-header,
+  .bottom-nav,
+  .more-menu,
+  .btn-add,
+  .modal,
+  .toast-container {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .section {
+    display: block !important;
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .dash-card, .vaccine-card, .reminder-card, .medical-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Dark mode transitions */
+[data-theme="dark"] .onboarding-screen {
+  background: linear-gradient(135deg, #1a1a3e 0%, #2d1b69 100%);
+}
+
+/* Accessibility - reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .dash-card, .vaccine-card, .reminder-card, .medical-card, .info-card {
+    border-width: 2px;
+    border-color: var(--text);
+  }
+}
+
+/* Touch device specific */
+@media (hover: none) and (pointer: coarse) {
+  .dash-card[data-nav]:hover,
+  .info-card:hover,
+  .vaccine-card:hover,
+  .reminder-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .dash-card[data-nav]:active,
+  .info-card:active {
+    transform: scale(0.98);
+  }
+}
