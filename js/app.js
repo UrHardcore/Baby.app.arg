@@ -498,10 +498,13 @@ const App = {
   async logout() {
     if (confirm('¿Cerrar sesion? Se cerrara tu cuenta. Los datos quedaran guardados en la nube.')) {
       try {
+        this.showLoadingScreen('Guardando datos...');
+        await Storage.syncNow();
         Storage.clearLocal();
         await window.FirebaseAuth.logout();
       } catch (err) {
         console.warn('Logout error:', err);
+        Storage.clearLocal();
         this.showAuthScreen();
       }
     }

@@ -42,7 +42,12 @@ const Storage = {
 
   _scheduleSync() {
     if (this._syncTimeout) clearTimeout(this._syncTimeout);
-    this._syncTimeout = setTimeout(() => this.syncToFirebase(), 1500);
+    this._syncTimeout = setTimeout(() => this.syncToFirebase(), 1000);
+  },
+
+  async syncNow() {
+    if (this._syncTimeout) clearTimeout(this._syncTimeout);
+    await this.syncToFirebase();
   },
 
   async syncToFirebase() {
@@ -116,7 +121,9 @@ const Storage = {
   },
 
   saveBabyProfile(profile) {
-    return this.set('profile', profile);
+    const result = this.set('profile', profile);
+    this.syncNow();
+    return result;
   },
 
   getVaccines() {
