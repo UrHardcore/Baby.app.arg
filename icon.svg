@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6c5ce7"/>
+      <stop offset="100%" style="stop-color:#a29bfe"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe0bd"/>
+      <stop offset="100%" style="stop-color:#ffd1a3"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="100" ry="100" fill="url(#bg)"/>
+  
+  <!-- Baby head -->
+  <circle cx="256" cy="240" r="120" fill="url(#face)"/>
+  
+  <!-- Hair tuft -->
+  <path d="M200 150 Q220 80 256 100 Q292 80 312 150" fill="none" stroke="#8B6914" stroke-width="12" stroke-linecap="round"/>
+  <path d="M215 140 Q240 70 256 95 Q272 70 297 140" fill="none" stroke="#A0781E" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Eyes -->
+  <circle cx="220" cy="230" r="16" fill="#2d3436"/>
+  <circle cx="292" cy="230" r="16" fill="#2d3436"/>
+  <!-- Eye shine -->
+  <circle cx="226" cy="224" r="5" fill="white"/>
+  <circle cx="298" cy="224" r="5" fill="white"/>
+  
+  <!-- Cheeks (blush) -->
+  <circle cx="195" cy="260" r="18" fill="#ffb8b8" opacity="0.5"/>
+  <circle cx="317" cy="260" r="18" fill="#ffb8b8" opacity="0.5"/>
+  
+  <!-- Smile -->
+  <path d="M230 268 Q256 298 282 268" fill="none" stroke="#2d3436" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Pacifier -->
+  <circle cx="256" cy="310" r="18" fill="#6c5ce7" stroke="#5a4bd1" stroke-width="3"/>
+  <circle cx="256" cy="310" r="8" fill="#a29bfe"/>
+  <rect x="248" y="326" width="16" height="8" rx="4" fill="#5a4bd1"/>
+  
+  <!-- Body / onesie -->
+  <path d="M180 355 Q180 340 210 340 L302 340 Q332 340 332 355 L340 420 Q340 440 320 440 L192 440 Q172 440 172 420 Z" fill="white" opacity="0.9"/>
+  
+  <!-- Heart on onesie -->
+  <path d="M244 375 C244 370 238 365 232 365 C222 365 222 378 232 388 L244 400 L256 388 C266 378 266 365 256 365 C250 365 244 370 244 375 Z" fill="#ff6b6b" transform="translate(12, 0)"/>
+  
+  <!-- Text "MB" -->
+  <text x="256" y="482" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="36" fill="white" opacity="0.9">Mi Baby ARG</text>
+</svg>

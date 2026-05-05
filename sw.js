@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mi-baby-arg-v2';
+const CACHE_NAME = 'mi-baby-arg-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -14,7 +14,10 @@ const ASSETS = [
   '/js/growth.js',
   '/js/info.js',
   '/js/data.js',
-  '/js/utils.js'
+  '/js/utils.js',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
