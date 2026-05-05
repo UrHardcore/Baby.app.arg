@@ -6,30 +6,10 @@
 const App = {
   currentSection: 'dashboard',
   authReady: false,
-  isGuest: false,
- 
+
   init() {
     this.initTheme();
     this.bindAuthEvents();
-    this.checkGuestOrFirebase();
-  },
- 
-  checkGuestOrFirebase() {
-    const guestMode = localStorage.getItem('bebecare_guest_mode');
-    if (guestMode === 'true') {
-      this.isGuest = true;
-      this.authReady = true;
-      const profile = Storage.getBabyProfile();
-      if (profile) {
-        this.showApp();
-        this.bindEvents();
-      } else {
-        this.showOnboarding();
-        this.bindEvents();
-      }
-      this.waitForFirebase();
-      return;
-    }
     this.waitForFirebase();
   },
  
@@ -49,7 +29,6 @@ const App = {
   setupAuth() {
     window.FirebaseAuth.onAuthChanged(async (user) => {
       this.authReady = true;
-      if (this.isGuest) return;
       if (user) {
         this.showLoadingScreen('Cargando datos...');
         const hasData = await Storage.loadFromFirebase();
@@ -137,10 +116,6 @@ const App = {
     document.getElementById('show-email-login')?.addEventListener('click', () => {
       document.getElementById('auth-welcome').classList.add('hidden');
       document.getElementById('login-form').classList.remove('hidden');
-    });
- 
-    document.getElementById('guest-login-btn')?.addEventListener('click', () => {
-      this.handleGuestLogin();
     });
  
     document.getElementById('back-to-welcome-login')?.addEventListener('click', (e) => {
@@ -231,8 +206,6 @@ const App = {
  
     this.setAuthLoading('login-submit-btn', true);
     try {
-      this.isGuest = false;
-      localStorage.removeItem('bebecare_guest_mode');
       await window.FirebaseAuth.login(email, password);
     } catch (err) {
       this.showAuthError('login-error', this.getFirebaseErrorMessage(err.code));
@@ -273,8 +246,6 @@ const App = {
     if (loginBtn) loginBtn.disabled = true;
  
     try {
-      this.isGuest = false;
-      localStorage.removeItem('bebecare_guest_mode');
       await window.FirebaseAuth.loginWithGoogle();
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
@@ -282,19 +253,6 @@ const App = {
       }
     } finally {
       if (loginBtn) loginBtn.disabled = false;
-    }
-  },
- 
-  handleGuestLogin() {
-    this.isGuest = true;
-    localStorage.setItem('bebecare_guest_mode', 'true');
-    const profile = Storage.getBabyProfile();
-    if (profile) {
-      this.showApp();
-      this.bindEvents();
-    } else {
-      this.showOnboarding();
-      this.bindEvents();
     }
   },
  
@@ -340,10 +298,6 @@ const App = {
  
     document.getElementById('theme-toggle').addEventListener('click', () => {
       this.toggleTheme();
-    });
- 
-    document.getElementById('export-btn').addEventListener('click', () => {
-      this.exportData();
     });
  
     document.getElementById('logout-btn').addEventListener('click', () => {
@@ -523,15 +477,6 @@ const App = {
   },
  
   async logout() {
-    if (this.isGuest) {
-      if (confirm('¿Cerrar sesion de invitado? Los datos de este dispositivo se mantendran.')) {
-        localStorage.removeItem('bebecare_guest_mode');
-        this.isGuest = false;
-        this.showAuthScreen();
-        this.showAuthWelcome();
-      }
-      return;
-    }
     if (confirm('¿Cerrar sesion? Los datos quedaran guardados en la nube.')) {
       try {
         this.showLoadingScreen('Guardando datos...');
@@ -549,10 +494,12 @@ const App = {
   async resetApp() {
     if (confirm('¿Estas seguro? Se borraran TODOS los datos de tu bebe.')) {
       Storage.clearLocal();
-      if (!this.isGuest) {
-        const uid = window.FirebaseAuth.getUid();
-        if (uid) {
-            await window.FirebaseDB.saveAppData(uid, { profile: null, vaccines: {}, reminders: [], medical: [], growth: [], lastSync: Date.now() });
+      const uid = window.FirebaseAuth.getUid();
+      if (uid) {
+        try {
+          await window.FirebaseDB.saveAppData(uid, { profile: null, vaccines: {}, reminders: [], medical: [], growth: [], lastSync: Date.now() });
+        } catch (err) {
+          console.warn('Reset error:', err);
         }
       }
       this.showOnboarding();
