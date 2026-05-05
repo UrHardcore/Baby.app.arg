@@ -51,7 +51,6 @@ const Storage = {
   },
  
   async syncToFirebase() {
-    if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) return;
     if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) {
       console.log('syncToFirebase: no auth or no uid, skipping');
       return;
@@ -59,6 +58,10 @@ const Storage = {
     const uid = window.FirebaseAuth.getUid();
     try {
       const data = {
+        profile: this.getBabyProfile(),
+        vaccines: this.getVaccines(),
+        reminders: this.getReminders(),
+        medical: this.getMedicalRecords(),
         growth: this.getGrowthRecords(),
         lastSync: Date.now()
       };
@@ -66,13 +69,11 @@ const Storage = {
       await window.FirebaseDB.saveAppData(uid, data);
       console.log('syncToFirebase: save complete');
     } catch (err) {
-      console.warn('Firebase sync error:', err);
       console.error('Firebase sync error:', err);
     }
   },
  
   async loadFromFirebase() {
-    if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) return false;
     if (!window.FirebaseAuth || !window.FirebaseAuth.getUid()) {
       console.log('loadFromFirebase: no auth or no uid');
       return false;
@@ -82,16 +83,16 @@ const Storage = {
       console.log('loadFromFirebase: loading data for uid', uid);
       const data = await window.FirebaseDB.getAppData(uid);
       console.log('loadFromFirebase: got data', data ? 'yes' : 'no', 'profile:', data?.profile ? data.profile.name : 'null');
-      if (data && data.profile) {
+      if (data) {
         if (data.profile) this.saveBabyProfileLocal(data.profile);
-        this.saveBabyProfileLocal(data.profile);
         if (data.vaccines) this.saveVaccinesLocal(data.vaccines);
         if (data.reminders) this.saveRemindersLocal(data.reminders);
         if (data.medical) this.saveMedicalRecordsLocal(data.medical);
+        if (data.growth) this.saveGrowthRecordsLocal(data.growth);
+        return true;
       }
       return false;
     } catch (err) {
-      console.warn('Firebase load error:', err);
       console.error('Firebase load error:', err);
       return false;
     }
