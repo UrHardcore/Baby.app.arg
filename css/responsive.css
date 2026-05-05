@@ -3,6 +3,91 @@
    Mobile-first approach
    ======================================== */
 
+/* Mobile phones (< 600px) */
+@media (max-width: 599px) {
+  .app-header {
+    padding: 0 10px;
+  }
+
+  .header-left {
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .header-info {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .header-info h1 {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-age {
+    font-size: 11px;
+  }
+
+  .header-right {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .baby-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .app-main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+  }
+
+  .dash-card {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .dash-card-icon {
+    font-size: 24px;
+  }
+
+  .dash-card-label {
+    font-size: 10px;
+  }
+
+  .dash-card-value {
+    font-size: 13px;
+  }
+
+  .dash-card-age .dash-card-value {
+    font-size: 16px;
+  }
+
+  .dash-tip {
+    font-size: 12px;
+  }
+}
+
 /* Small phones (< 360px) */
 @media (max-width: 359px) {
   .onboarding-container {
@@ -27,6 +112,10 @@
 
   .nav-item span {
     font-size: 10px;
+  }
+
+  .header-info h1 {
+    font-size: 13px;
   }
 }
 

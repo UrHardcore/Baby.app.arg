@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mi-baby-arg-v3';
+const CACHE_NAME = 'mi-baby-arg-v4';
 const ASSETS = [
   '/',
   '/index.html',
