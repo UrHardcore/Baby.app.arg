@@ -222,6 +222,19 @@
           </div>
         </div>
 
+        <!-- Install App Banner (mobile) -->
+        <div class="install-banner hidden" id="install-banner">
+          <div class="install-banner-icon">
+            <img src="icon-192.png" alt="Mi Baby ARG" width="48" height="48">
+          </div>
+          <div class="install-banner-text">
+            <strong>Instalar Mi Baby ARG</strong>
+            <span>Accede rapido desde tu pantalla de inicio</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="install-banner-btn">Instalar</button>
+          <button class="install-banner-close" id="install-banner-close" aria-label="Cerrar">&times;</button>
+        </div>
+
         <!-- Quick Development Timeline -->
         <div class="timeline-preview">
           <h3>Linea de desarrollo</h3>
@@ -457,23 +470,76 @@
   <script>
     // PWA Install
     let deferredPrompt = null;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const bannerDismissed = localStorage.getItem('bebecare_install_dismissed');
+
+    function showInstallBanner() {
+      if (isStandalone || bannerDismissed) return;
+      const banner = document.getElementById('install-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    function hideInstallBanner() {
+      const banner = document.getElementById('install-banner');
+      if (banner) banner.classList.add('hidden');
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       const btn = document.getElementById('install-btn');
       if (btn) btn.classList.remove('hidden');
+      showInstallBanner();
     });
+
+    // Header install button
     document.getElementById('install-btn')?.addEventListener('click', async () => {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
+      await deferredPrompt.userChoice;
       deferredPrompt = null;
       document.getElementById('install-btn').classList.add('hidden');
+      hideInstallBanner();
     });
+
+    // Banner install button
+    document.getElementById('install-banner-btn')?.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        hideInstallBanner();
+      } else {
+        // No native prompt - show manual instructions
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          alert('Para instalar:\n1. Toca el icono de Compartir (cuadrado con flecha)\n2. Selecciona "Agregar a pantalla de inicio"');
+        } else {
+          alert('Para instalar:\n1. Toca el menu (3 puntos arriba a la derecha)\n2. Selecciona "Agregar a pantalla de inicio" o "Instalar app"');
+        }
+      }
+    });
+
+    // Banner close button
+    document.getElementById('install-banner-close')?.addEventListener('click', () => {
+      hideInstallBanner();
+      localStorage.setItem('bebecare_install_dismissed', 'true');
+    });
+
     window.addEventListener('appinstalled', () => {
       document.getElementById('install-btn')?.classList.add('hidden');
+      hideInstallBanner();
       deferredPrompt = null;
     });
+
+    // Show banner on mobile if not installed and not dismissed
+    if (!isStandalone && !bannerDismissed) {
+      const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        setTimeout(showInstallBanner, 2000);
+      }
+    }
+
     // Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
