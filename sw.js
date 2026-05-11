@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mi-baby-arg-v8';
+const CACHE_NAME = 'mi-baby-arg-v9';
 const ASSETS = [
   '/',
   '/index.html',
@@ -17,6 +17,8 @@ const ASSETS = [
   '/js/utils.js',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-maskable-192.png',
+  '/icon-maskable-512.png',
   '/manifest.json'
 ];
 
