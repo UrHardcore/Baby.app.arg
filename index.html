@@ -156,7 +156,7 @@
         </div>
       </div>
       <div class="header-right">
-        <button class="icon-btn hidden" id="install-btn" title="Instalar App" aria-label="Instalar aplicacion">
+        <button class="icon-btn" id="install-btn" title="Instalar App" aria-label="Instalar aplicacion">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>
         </button>
         <button class="icon-btn" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema">
@@ -484,40 +484,36 @@
       if (banner) banner.classList.add('hidden');
     }
 
+    function triggerInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          alert('Para instalar Mi Baby ARG:\n\n1. Toca el icono de Compartir (cuadrado con flecha arriba)\n2. Desplaza y selecciona "Agregar a pantalla de inicio"\n3. Toca "Agregar"');
+        } else {
+          alert('Para instalar Mi Baby ARG:\n\n1. Toca el menu del navegador (3 puntos arriba a la derecha)\n2. Selecciona "Agregar a pantalla de inicio" o "Instalar app"\n3. Confirma la instalacion');
+        }
+      }
+    }
+
+    // Capture the beforeinstallprompt event if available
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      const btn = document.getElementById('install-btn');
-      if (btn) btn.classList.remove('hidden');
       showInstallBanner();
     });
 
-    // Header install button
-    document.getElementById('install-btn')?.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      document.getElementById('install-btn').classList.add('hidden');
-      hideInstallBanner();
-    });
+    // Header install button - always works
+    document.getElementById('install-btn')?.addEventListener('click', triggerInstall);
 
-    // Banner install button
-    document.getElementById('install-banner-btn')?.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-        hideInstallBanner();
-      } else {
-        // No native prompt - show manual instructions
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS) {
-          alert('Para instalar:\n1. Toca el icono de Compartir (cuadrado con flecha)\n2. Selecciona "Agregar a pantalla de inicio"');
-        } else {
-          alert('Para instalar:\n1. Toca el menu (3 puntos arriba a la derecha)\n2. Selecciona "Agregar a pantalla de inicio" o "Instalar app"');
-        }
-      }
+    // Banner install button - always works
+    document.getElementById('install-banner-btn')?.addEventListener('click', () => {
+      triggerInstall();
+      if (deferredPrompt === null) hideInstallBanner();
     });
 
     // Banner close button
@@ -527,22 +523,28 @@
     });
 
     window.addEventListener('appinstalled', () => {
-      document.getElementById('install-btn')?.classList.add('hidden');
+      const installBtn = document.getElementById('install-btn');
+      if (installBtn) installBtn.style.display = 'none';
       hideInstallBanner();
       deferredPrompt = null;
     });
 
-    // Show banner on mobile if not installed and not dismissed
-    if (!isStandalone && !bannerDismissed) {
-      const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile) {
-        setTimeout(showInstallBanner, 2000);
-      }
+    // Hide install button if already running as installed app
+    if (isStandalone) {
+      const installBtn = document.getElementById('install-btn');
+      if (installBtn) installBtn.style.display = 'none';
     }
 
-    // Service Worker
+    // Show banner after 2 seconds if not installed and not dismissed
+    if (!isStandalone && !bannerDismissed) {
+      setTimeout(showInstallBanner, 2000);
+    }
+
+    // Service Worker - register with update check
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        reg.update();
+      }).catch(() => {});
     }
   </script>
 </body>
